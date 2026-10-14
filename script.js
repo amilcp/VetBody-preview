@@ -586,26 +586,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chestResult) chestResult.innerHTML = '<span style="color: #E05A47;">Por favor introduza uma medida em cm válida.</span>';
         return;
       }
-      let calcTam = '5';
-      if (val <= 28)      calcTam = '0,0';
-      else if (val <= 34) calcTam = '0';
-      else if (val <= 36) calcTam = '1';
-      else if (val <= 38) calcTam = '2';
-      else if (val <= 42) calcTam = '3';
-      else if (val <= 45) calcTam = '4';
-      else if (val <= 50) calcTam = '5';
-      else if (val <= 58) calcTam = '6';
-      else if (val <= 62) calcTam = '7';
-      else if (val <= 64) calcTam = '8';
-      else if (val <= 70) calcTam = '9';
-      else if (val <= 72) calcTam = '10';
-      else if (val <= 80) calcTam = '11';
-      else if (val <= 86) calcTam = '12';
-      else if (val <= 88) calcTam = '13';
-      else if (val <= 92) calcTam = '14';
-      else calcTam = '15';
+      const activeType = document.querySelector('.modal-tab.active')?.dataset.tab || state.animalType;
+      const rows = [...document.querySelectorAll(`#tab-${activeType} tbody tr:not(.group-header):not(.group-row)`)];
+      const match = rows.find(row => val <= parseFloat(row.cells[3].textContent.replace(',', '.')));
+      if (!match) {
+        if (chestResult) chestResult.textContent = 'Medida fora da tabela. Confirma o tamanho antes de encomendar.';
+        return;
+      }
+      const calcTam = match.cells[0].textContent.trim();
       if (chestResult) chestResult.innerHTML = `Com ${val} cm de circunferência: Tamanho recomendado <strong>TAM ${calcTam}</strong>`;
-      if (productSizeSelect && state.animalType !== 'gato') {
+      if (productSizeSelect) {
+        if (state.animalType !== activeType) selectAnimalType(activeType);
         productSizeSelect.value = calcTam;
         const selectedOpt = productSizeSelect.options[productSizeSelect.selectedIndex];
         if (selectedOpt && selectedOpt.dataset.price) {
@@ -647,6 +638,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       e.stopPropagation();
       if (measureModal) measureModal.classList.add('active');
+      const matchingTab = [...document.querySelectorAll('.modal-tab')].find(tab => tab.dataset.tab === state.animalType);
+      matchingTab?.click();
     });
   });
   if (closeMeasureModalBtn && measureModal) {
